@@ -353,3 +353,53 @@ require get_template_directory() . '/inc/template-tags.php';
  * @since Twenty Fifteen 1.0
  */
 require get_template_directory() . '/inc/customizer.php';
+
+/* ---------------------------------------------------------
+ *
+ *  My Test
+ *
+ * --------------------------------------------------------- */
+// create custom post type
+add_action('init', 'add_my_post_type');
+function add_my_post_type() {
+  $post_type = 'works';
+  $labels = array(
+    'name'          => _x('works', 'works'),
+    'singular_name' => _x('works', 'works'),
+    'add_new'       => __('worksを新規作成'),
+    'add_new_item'  => __('worksを作成'),
+    'edit_item'     => __('worksを編集'),
+    'new_item'      => __('新しいworks'),
+    'view_item'     => __('worksを見る'),
+    'search_items'  => __('worksを探す'),
+    'not_found'     => __('worksはありません'),
+    'not_found_in_trash' => __('ゴミ箱にworksはありません'),
+  );
+  $args = array(
+    'labels'             => $labels,
+    'public'             => true,
+    'publicly_queryable' => true,
+    'show_ui'            => true,
+    'show_in_menu'       => true,
+    'query_var'          => true,
+    'capability_type'    => 'post',
+    'has_archive'        => true,
+    'hierarchical'       => false,
+    'menu_position'      => null,
+    'menu_icon'          => 'dashicons-art',
+    'rewrite'            => array(
+      'slug' => $post_type
+    ),
+    'supports'           => array(
+      'title',
+      'editor',
+      'author',
+      'thumbnail',
+      'excerpt',
+      'comments'
+    )
+  );
+  register_post_type($post_type, $args);
+  // ↓ を記述しない場合は管理画面のパーマリンク設定を更新する事
+  // flush_rewrite_rules( false );
+}
