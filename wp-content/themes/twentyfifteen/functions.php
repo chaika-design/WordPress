@@ -353,3 +353,20 @@ require get_template_directory() . '/inc/template-tags.php';
  * @since Twenty Fifteen 1.0
  */
 require get_template_directory() . '/inc/customizer.php';
+
+require_once( dirname(__FILE__) . '/classes/My_Category_Checklist.php' );
+
+function my_wp_category_terms_checklist_no_top_radio( $args, $post_id = null ) {
+    $args['checked_ontop'] = false;
+    $args['walker'] = new My_Category_Checklist();
+    return $args;
+}
+add_action( 'wp_terms_checklist_args', 'my_wp_category_terms_checklist_no_top_radio' );
+
+/**
+ *	管理画面のcss, js
+ */
+function add_myAdmin_scripts() {
+  wp_enqueue_script('my-admin-script', get_bloginfo("template_directory") . '/js/my_admin.js', array('jquery'), '1.0', true);
+}
+add_action( 'admin_enqueue_scripts', 'add_myAdmin_scripts' );
