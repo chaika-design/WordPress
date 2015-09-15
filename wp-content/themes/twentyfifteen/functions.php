@@ -403,3 +403,25 @@ function add_my_post_type() {
   // ↓ を記述しない場合は管理画面のパーマリンク設定を更新する事
   // flush_rewrite_rules( false );
 }
+
+/* ---------------------------------------------------------
+ *
+ *  Search Test
+ *  refs. http://chaika.hatenablog.com/entry/2014/10/10/200016
+ *
+ * --------------------------------------------------------- */
+function my_posts_per_page($query) {
+  if( is_search() ) {
+    $query->set( 'post_type', array('post', 'works') );
+  }
+}
+add_action( 'pre_get_posts', 'my_posts_per_page' );
+
+function my_posy_search($search) {
+  if(is_search()) {
+    // post_type='news'も検索結果に含める
+    $search .= " AND (post_type = 'post' OR post_type='works')";
+  }
+  return $search;
+}
+add_filter('posts_search', 'my_posy_search');
