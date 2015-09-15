@@ -408,17 +408,37 @@ function codex_book_init() {
 function my_posts_per_page( $wp_query ) {
   if( $wp_query->is_post_type_archive('book')
     && post_type_supports( $wp_query->query_vars['post_type'], 'page-attributes' ) ) {
-    if( !isset( $wp_query->query_vars['orderby'] ) ) {
-      // orderby が明示的に指定されていなければ、順序(menu_order)で並び替える
-      $wp_query->query_vars['orderby'] = 'menu_order';
-    }
-    if ( !isset( $wp_query->query_vars['order'] ) ) {
-      // order が明示的に指定されていなければ、順序(menu_order)の数字が小さい方から並べる為にASCを指定
-      $wp_query->query_vars['order'] = 'ASC';
-    }
+    $wp_query->set('orderby', 'menu_order date');
+    $wp_query->set('order', 'ASC');
+    $wp_query->set('my_orders', 'ASC DESC');
   }
 }
 add_action( 'pre_get_posts', 'my_posts_per_page' );
+
+// ORDER BY節を変更するフィルター
+add_filter( 'posts_orderby','change_posts_orderby', 10, 2 );
+function change_posts_orderby($orderby, $query) {
+  // my_orders をスペース区切りで配列に変換する。 ※ my_orders が無ければ値が0個の配列になる
+  $orders = array_filter( explode(' ', strtoupper( $query->get('my_orders') )) );
+  // my_orders がある時だけORDER BY節を変更する
+  if( count($orders) > 0 ) {
+    $orderby_arg = array();
+    $order_arg = array('DESC', 'ASC');
+    // $orderby文のDESC, ASC を削除して , で分割
+    foreach( explode(',', str_replace($order_arg, '', $orderby)) as $i => $the_orderby ) {
+      if( isset($orders[$i]) && in_array($orders[$i], $order_arg) ) {
+        // 対応する order がある時
+        $orderby_arg[] = trim($the_orderby) . ' ' . $orders[$i];
+      } else {
+        // 対応する order が無い あるいは DESC, ASCでない場合は デフォルト値 DESC を使う
+        $orderby_arg[] = trim($the_orderby) . ' DESC';
+      }
+    }
+    // それぞれの orderby の入った配列を , で連結した文字列にする
+    $orderby = implode(',', $orderby_arg);
+  }
+  return $orderby;
+}
 
 // display admin index
 function manage_book_columns($columns) {
@@ -458,9 +478,9 @@ function is_same_menu_order_post($post, $is_previous = true) {
     $post->menu_order
   );
   if( $is_previous ) {
-    $sql .= $wpdb->prepare(" AND post_date < %s", $post->post_date);
-  } else {
     $sql .= $wpdb->prepare(" AND post_date > %s", $post->post_date);
+  } else {
+    $sql .= $wpdb->prepare(" AND post_date < %s", $post->post_date);
   }
   $c = $wpdb->get_var($sql);
   if($c) {
@@ -477,7 +497,7 @@ function my_previous_post_where($where, $in_same_term, $excluded_terms) {
   if($post_type == 'book') {
     if( is_same_menu_order_post($post, true) ) {
       return $wpdb->prepare(
-        "WHERE p.post_type = %s AND p.post_status = 'publish' AND p.menu_order <= %s AND p.post_date < %s $posts_in_ex_terms_sql",
+        "WHERE p.post_type = %s AND p.post_status = 'publish' AND p.menu_order <= %s AND p.post_date > %s $posts_in_ex_terms_sql",
         $post->post_type,
         $post->menu_order,
         $post->post_date
@@ -500,7 +520,7 @@ function my_next_post_where($where, $in_same_term, $excluded_terms) {
   if($post_type == 'book') {
     if( is_same_menu_order_post($post, false) ) {
       return $wpdb->prepare(
-        "WHERE p.post_type = %s AND p.post_status = 'publish' AND p.menu_order >= %s AND p.post_date > %s $posts_in_ex_terms_sql",
+        "WHERE p.post_type = %s AND p.post_status = 'publish' AND p.menu_order >= %s AND p.post_date < %s $posts_in_ex_terms_sql",
         $post->post_type,
         $post->menu_order,
         $post->post_date
@@ -524,7 +544,7 @@ function my_previous_post_sort($sort) {
   global $post;
   $post_type = get_post_type($post);
   if($post_type == 'book') {
-   return 'ORDER BY p.menu_order DESC, p.post_date DESC LIMIT 1';
+   return 'ORDER BY p.menu_order DESC, p.post_date ASC LIMIT 1';
   }
   // 対象でない場合もreturnが必要
   return $sort;
@@ -534,7 +554,7 @@ function my_next_post_sort($sort) {
   global $post;
   $post_type = get_post_type($post);
   if($post_type == 'book') {
-    return 'ORDER BY p.menu_order ASC, p.post_date ASC LIMIT 1';
+    return 'ORDER BY p.menu_order ASC, p.post_date DESC LIMIT 1';
   }
   // 対象でない場合もreturnが必要
   return $sort;
