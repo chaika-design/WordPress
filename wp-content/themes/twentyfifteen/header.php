@@ -48,3 +48,32 @@
 	</div><!-- .sidebar -->
 
 	<div id="content" class="site-content">
+
+<?php
+	/**
+	 *  search form
+	 *  refs. https://teratail.com/questions/16301
+	 */
+?>
+<form method="get" id="searchform" action="<?php bloginfo("url") ?>">
+<input type="hidden" name="s" id="s" placeholder="検索" />
+<select name="low">
+<option value="0" selected>範囲指定なし</option>
+<?php
+	for($i=0; $i<=10; $i++) {
+		$price = 500 + (200 * $i);
+		echo '<option value="' . $price . '">' . $price . '</option>';
+	}
+?>
+</select>以上
+<select name="high">
+<option value="-1" selected>範囲指定なし</option>
+<?php
+	for($i=10; $i>=0; $i--) {
+		$price = 3000 - (200 * $i);
+		echo '<option value="' . $price . '">' . $price . '</option>';
+	}
+?>
+</select>以下
+<input type="submit" value="検索" />
+</form>
