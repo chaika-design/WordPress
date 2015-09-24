@@ -56,7 +56,7 @@
 	 */
 ?>
 <form method="get" id="searchform" action="<?php bloginfo("url") ?>">
-<input type="hidden" name="s" id="s" placeholder="検索" />
+<input type="text" name="s" id="s" placeholder="検索" />
 <select name="low">
 <option value="0" selected>範囲指定なし</option>
 <?php

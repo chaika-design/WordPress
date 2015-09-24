@@ -11,13 +11,14 @@ get_header(); ?>
 
 	<section id="primary" class="content-area">
 		<main id="main" class="site-main" role="main">
+<?php if(isset($_GET['low']) && isset($_GET['high'])): ?>
 <?php
 //値を取得
 $compare = 'BETWEEN';
 $s = $_GET['s'];
 $low = intval($_GET['low']);
 $high = intval($_GET['high']);
-if($high) {
+if($high > 0) {
 	$value = array( $low, $high );
 } else {
 	$value = $low;
@@ -43,6 +44,7 @@ $cutomSearchPosts = new WP_Query(array(
 	<?php get_template_part( 'content', 'search' ); ?>
 <?php endwhile; wp_reset_postdata(); else : ?>
 該当なし
+<?php endif; ?>
 <?php endif; ?>
 
 		<?php if ( have_posts() ) : ?>
