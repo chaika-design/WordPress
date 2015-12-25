@@ -397,6 +397,7 @@ function codex_book_init() {
       'thumbnail',
       'excerpt',
       'comments',
+      'custom-fields',
       'page-attributes', // 属性(順序)を表示する
     )
   );
@@ -408,37 +409,13 @@ function codex_book_init() {
 function my_posts_per_page( $wp_query ) {
   if( $wp_query->is_post_type_archive('book')
     && post_type_supports( $wp_query->query_vars['post_type'], 'page-attributes' ) ) {
-    $wp_query->set('orderby', 'menu_order date');
-    $wp_query->set('order', 'ASC');
-    $wp_query->set('my_orders', 'ASC DESC');
+    $wp_query->set('meta_key', 'my_book_num' );
+    $wp_query->set('orderby', array('menu_order' => 'ASC', 'date' => 'DESC', 'meta_value' => 'ASC') );
+    // orderの指定は不要
+    //$wp_query->set('order', 'ASC');
   }
 }
 add_action( 'pre_get_posts', 'my_posts_per_page' );
-
-// ORDER BY節を変更するフィルター
-add_filter( 'posts_orderby','change_posts_orderby', 10, 2 );
-function change_posts_orderby($orderby, $query) {
-  // my_orders をスペース区切りで配列に変換する。 ※ my_orders が無ければ値が0個の配列になる
-  $orders = array_filter( explode(' ', strtoupper( $query->get('my_orders') )) );
-  // my_orders がある時だけORDER BY節を変更する
-  if( count($orders) > 0 ) {
-    $orderby_arg = array();
-    $order_arg = array('DESC', 'ASC');
-    // $orderby文のDESC, ASC を削除して , で分割
-    foreach( explode(',', str_replace($order_arg, '', $orderby)) as $i => $the_orderby ) {
-      if( isset($orders[$i]) && in_array($orders[$i], $order_arg) ) {
-        // 対応する order がある時
-        $orderby_arg[] = trim($the_orderby) . ' ' . $orders[$i];
-      } else {
-        // 対応する order が無い あるいは DESC, ASCでない場合は デフォルト値 DESC を使う
-        $orderby_arg[] = trim($the_orderby) . ' DESC';
-      }
-    }
-    // それぞれの orderby の入った配列を , で連結した文字列にする
-    $orderby = implode(',', $orderby_arg);
-  }
-  return $orderby;
-}
 
 // display admin index
 function manage_book_columns($columns) {
